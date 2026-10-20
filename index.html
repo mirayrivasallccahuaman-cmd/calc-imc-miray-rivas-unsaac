@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Calculadora IMC UNSAAC 3D (Offline) - Miray Rivas</title>
+
+    <style>
+        /* CSS Reset & Universal System Fonts (Cross-Browser Baseline) */
+        *, *::before, *::after {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background: #0284c7;
+            background: -webkit-linear-gradient(135deg, #0284c7 0%, #2563eb 30%, #6d28d9 70%, #d946ef 100%);
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 30%, #6d28d9 70%, #d946ef 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            position: relative;
+            overflow-x: hidden;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            -webkit-box-pack: space-between;
+            -webkit-justify-content: space-between;
+            -ms-flex-pack: space-between;
+            justify-content: space-between;
+        }
+
+        /* Ambient Light Glows */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -20%; left: -20%;
+            width: 140%; height: 140%;
+            background: 
+                radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.35), transparent 45%),
+                radial-gradient(circle at 80% 35%, rgba(253, 224, 71, 0.35), transparent 45%),
+                radial-gradient(circle at 50% 80%, rgba(244, 114, 182, 0.3), transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Cross-Browser Glassmorphism Styles */
+        .crystal-card {
+            background: rgba(255, 255, 255, 0.18);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            backdrop-filter: blur(25px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            -webkit-box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+            -webkit-transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            border-radius: 1.5rem;
+            padding: 1.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .crystal-card {
+                padding: 2rem;
+            }
+        }
+
+        .crystal-header {
+            background: rgba(15, 23, 42, 0.88);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #fef3c7 40%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: #fde047; /* Fallback for older browsers without background-clip text */
+        }
+
+        /* Responsive Layout Utilities */
+        .max-w-4xl { max-width: 56rem; margin-left: auto; margin-right: auto; }
+        .max-w-3xl { max-width: 48rem; margin-left: auto; margin-right: auto; }
+        .w-full { width: 100%; }
+        .flex { display: -webkit-box; display: -webkit-flex; display: -ms-flexbox; display: flex; }
+        .flex-col { -webkit-box-orient: vertical; -webkit-box-direction: normal; -webkit-flex-direction: column; -ms-flex-direction: column; flex-direction: column; }
+        .items-center { -webkit-box-align: center; -webkit-align-items: center; -ms-flex-align: center; align-items: center; }
+        .justify-between { -webkit-box-pack: justify; -webkit-justify-content: space-between; -ms-flex-pack: justify; justify-content: space-between; }
+        .justify-center { -webkit-box-pack: center; -webkit-justify-content: center; -ms-flex-pack: center; justify-content: center; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-5 { gap: 1.25rem; }
+        .space-y-3 > * + * { margin-top: 0.75rem; }
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .space-y-6 > * + * { margin-top: 1.5rem; }
+
+        .grid { display: grid; grid-template-columns: 1fr; }
+        @media (min-width: 640px) {
+            .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .sm-flex-row { 
+                -webkit-box-orient: horizontal; -webkit-box-direction: normal; 
+                -webkit-flex-direction: row; -ms-flex-direction: row; flex-direction: row; 
+            }
+            .sm-w-auto { width: auto; }
+        }
+
+        /* Cross-Browser Input Range Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.25);
+            height: 8px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        /* Chrome, Safari, Edge, Opera Thumb */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            -webkit-box-shadow: 0 0 14px rgba(56, 189, 248, 0.9);
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.9);
+            border: 2px solid #ffffff;
+            -webkit-transition: -webkit-transform 0.15s ease-in-out;
+            transition: transform 0.15s ease-in-out;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            -webkit-transform: scale(1.15);
+            transform: scale(1.15);
+            background: #7dd3fc;
+        }
+
+        /* Firefox Thumb */
+        input[type=range]::-moz-range-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.9);
+            border: 2px solid #ffffff;
+            transition: transform 0.15s ease-in-out;
+        }
+
+        input[type=range]::-moz-range-thumb:hover {
+            transform: scale(1.15);
+            background: #7dd3fc;
+        }
+
+        input[type=range]::-moz-range-track {
+            background: rgba(255, 255, 255, 0.25);
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        /* Animations */
+        @-webkit-keyframes subtlePulse {
+            0%, 100% { -webkit-transform: scale(1); transform: scale(1); }
+            50% { -webkit-transform: scale(1.012); transform: scale(1.012); }
+        }
+
+        @keyframes subtlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.012); }
+        }
+
+        @-webkit-keyframes emojiBounce {
+            0%, 100% { -webkit-transform: translateY(0) scale(1); transform: translateY(0) scale(1); }
+            50% { -webkit-transform: translateY(-5px) scale(1.1); transform: translateY(-5px) scale(1.1); }
+        }
+
+        @keyframes emojiBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-5px) scale(1.1); }
+        }
+
+        .alert-card-animation {
+            -webkit-animation: subtlePulse 4s infinite ease-in-out;
+            animation: subtlePulse 4s infinite ease-in-out;
+        }
+
+        .emoji-reaction-bounce {
+            -webkit-animation: emojiBounce 2s infinite ease-in-out;
+            animation: emojiBounce 2s infinite ease-in-out;
+            display: inline-block;
+        }
+
+        /* Badges and Boxes */
+        .input-box {
+            background-color: rgba(15, 23, 42, 0.7);
+            padding: 1rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            -webkit-box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        .value-display-bg {
+            background-color: rgba(0, 0, 0, 0.75);
+            border: 2px solid #38bdf8;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.75rem;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .num-input {
+            width: 4rem;
+            background: transparent;
+            text-align: right;
+            font-weight: 900;
+            color: #38bdf8;
+            font-size: 1.25rem;
+            border: none;
+            outline: none;
+            font-family: inherit;
+        }
+
+        /* Remove arrows on Firefox/Webkit number inputs */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .icon-badge {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            background-color: rgba(56, 189, 248, 0.2);
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+        }
+
+        .icon-svg {
+            width: 1.1rem;
+            height: 1.1rem;
+            fill: #38bdf8;
+        }
+
+        /* UNSAAC Header Seal Badge */
+        .unsaac-badge-outer {
+            width: 3.25rem;
+            height: 3.25rem;
+            border-radius: 9999px;
+            background: -webkit-linear-gradient(bottom left, #eab308, #fde047, #fef08a);
+            background: linear-gradient(to top right, #eab308, #fde047, #fef08a);
+            padding: 2px;
+            -webkit-flex-shrink: 0;
+            flex-shrink: 0;
+        }
+
+        .unsaac-badge-inner {
+            width: 100%;
+            height: 100%;
+            background-color: #2b0006;
+            border-radius: 9999px;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            padding: 0.25rem;
+            border: 1px solid rgba(253, 224, 71, 0.4);
+        }
+
+        /* Tag Indicating Cross-Browser & Offline Support */
+        .offline-tag {
+            background-color: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(52, 211, 153, 0.5);
+            padding: 0.375rem 0.875rem;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #6ee7b7;
+            display: -webkit-inline-box;
+            display: -webkit-inline-flex;
+            display: -ms-inline-flexbox;
+            display: inline-flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        /* Audio Button */
+        .btn-audio {
+            background-color: rgba(56, 189, 248, 0.25);
+            border: 2px solid #7dd3fc;
+            color: #f0f9ff;
+            padding: 0.5rem 0.875rem;
+            border-radius: 1rem;
+            display: -webkit-inline-box;
+            display: -webkit-inline-flex;
+            display: -ms-inline-flexbox;
+            display: inline-flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            -webkit-transition: all 0.2s ease;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-audio:hover {
+            background-color: rgba(56, 189, 248, 0.45);
+        }
+
+        .btn-audio:active {
+            -webkit-transform: scale(0.96);
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="w-full crystal-header" style="position: -webkit-sticky; position: sticky; top:0; z-index: 50;">
+        <div class="max-w-4xl" style="padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <!-- UNSAAC Seal -->
+                <div class="unsaac-badge-outer">
+                    <div class="unsaac-badge-inner">
+                        <svg viewBox="0 0 100 100" style="width:100%; height:100%; fill: #facc15;">
+                            <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="6 3"/>
+                            <circle cx="50" cy="50" r="28" fill="none" stroke="currentColor" stroke-width="3"/>
+                            <path d="M50 15 L54 30 L50 26 L46 30 Z" fill="currentColor"/>
+                            <path d="M50 85 L54 70 L50 74 L46 70 Z" fill="currentColor"/>
+                            <path d="M15 50 L30 54 L26 50 L30 46 Z" fill="currentColor"/>
+                            <path d="M85 50 L70 54 L74 50 L70 46 Z" fill="currentColor"/>
+                            <text x="50" y="55" font-size="14" font-weight="900" text-anchor="middle" fill="#d4af37">UNSAAC</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <div>
+                    <span style="font-size: 0.68rem; font-weight: 900; color: #fef08a; letter-spacing: 0.12em; text-transform: uppercase; display: block; margin-bottom: -1px; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">ANDAHUAYLAS - PERÚ</span>
+                    <h1 style="font-size: 1.125rem; font-weight: 900; color: #ffffff; line-height: 1.2;">UNSAAC</h1>
+                    <p style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.95); font-weight: 600;">Universidad Nacional de San Antonio Abad del Cusco</p>
+                    
+                    <!-- Author Tag -->
+                    <div style="display: flex; align-items: center; gap: 0.375rem; margin-top: 0.125rem; color: #fef08a; font-weight: 800; font-size: 0.75rem;">
+                        <svg class="icon-svg" viewBox="0 0 24 24" style="fill:#fef08a; width:0.875rem; height:0.875rem;">
+                            <path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-14 0v1a1 1 0 0 0 2 0v-1a5 5 0 0 1 10 0v1a1 1 0 0 0 2 0z"/>
+                        </svg>
+                        <span>MIRAY RIVAS &bull; Obstetricia Filial Andahuaylas</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Readiness Tag -->
+            <div class="offline-tag">
+                <svg viewBox="0 0 24 24" style="width: 0.875rem; height: 0.875rem; fill: currentColor;">
+                    <path d="M12 2a10 10 0 1 0 10 10 A10 10 0 0 0 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9z"/>
+                </svg>
+                <span>UNIVERSAL / 100% OFFLINE</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl" style="padding: 1.5rem 1rem; flex-grow: 1; width: 100%; display: flex; flex-direction: column; justify-content: center;">
+        
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <h2 class="gold-gradient-text" style="font-size: 1.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.025em; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                Calculadora Nutricional de IMC 3D
+            </h2>
+            <p style="font-size: 0.85rem; color: #ffffff; font-weight: 700; margin-top: 0.25rem; text-shadow: 0 1px 4px rgba(0,0,0,0.4);">
+                Evaluación preventiva e instantánea &bull; <span style="color: #fef08a; font-weight: 900;">Por: Miray Rivas (Obstetricia - Filial Andahuaylas)</span>
+            </p>
+        </div>
+
+        <!-- MAIN CALCULATOR CARD -->
+        <div id="mainCalculatorCard" class="crystal-card space-y-6">
+            
+            <div class="grid grid-cols-2 gap-5">
+                
+                <!-- Peso Input -->
+                <div class="input-box space-y-3">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label for="pesoInput" style="font-size: 0.75rem; font-weight: 900; color: #7dd3fc; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="icon-badge">
+                                <svg class="icon-svg" viewBox="0 0 24 24">
+                                    <path d="M12 2a3 3 0 1 1-3 3 3 3 0 0 1 3-3zm3 7h-6a2 2 0 0 0-2 2v6a1 1 0 0 0 2 0v5a1 1 0 0 0 2 0v-4h2v4a1 1 0 0 0 2 0v-5a1 1 0 0 0 2 0v-6a2 2 0 0 0-2-2z"/>
+                                </svg>
+                            </div>
+                            <span>Peso</span>
+                        </label>
+                        <div class="value-display-bg">
+                            <input type="number" id="pesoInput" value="70" min="20" max="250" step="0.5" class="num-input">
+                            <span style="font-size: 0.75rem; color: #38bdf8; font-weight: 900;">kg</span>
+                        </div>
+                    </div>
+                    <input type="range" id="pesoSlider" min="30" max="150" step="0.5" value="70">
+                </div>
+
+                <!-- Talla Input -->
+                <div class="input-box space-y-3">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label for="tallaInput" style="font-size: 0.75rem; font-weight: 900; color: #7dd3fc; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="icon-badge">
+                                <svg class="icon-svg" viewBox="0 0 24 24">
+                                    <path d="M12 2a3 3 0 1 1-3 3 3 3 0 0 1 3-3zm1 8h2a1 1 0 0 0 0-2h-8a1 1 0 0 0 0 2h2v11a1 1 0 0 0 2 0V10zM19 12l-3-3v2H8V9h2L7 6 4 9h2v8H4l3 3 3-3H8v-3h8v2h-2l3 3z"/>
+                                </svg>
+                            </div>
+                            <span>Estatura</span>
+                        </label>
+                        <div class="value-display-bg">
+                            <input type="number" id="tallaInput" value="1.70" min="0.8" max="2.4" step="0.01" class="num-input">
+                            <span style="font-size: 0.75rem; color: #38bdf8; font-weight: 900;">m</span>
+                        </div>
+                    </div>
+                    <input type="range" id="tallaSlider" min="1.00" max="2.20" step="0.01" value="1.70">
+                </div>
+
+            </div>
+
+            <!-- 3D Gauge Display Box -->
+            <div style="position: relative; width: 100%; height: 12rem; background-color: rgba(2, 6, 23, 0.8); border-radius: 1rem; border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <canvas id="gauge3DCanvas" style="width: 100%; height: 100%; cursor: grab; display: block; touch-action: none;"></canvas>
+                <div style="position: absolute; bottom: 0.5rem; font-size: 0.7rem; color: rgba(224, 242, 254, 0.85); font-weight: 600; pointer-events: none; display: flex; align-items: center; gap: 0.375rem; background-color: rgba(0, 0, 0, 0.65); padding: 0.25rem 0.875rem; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.15); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);">
+                    <svg viewBox="0 0 24 24" style="width: 0.75rem; height: 0.75rem; fill: #38bdf8;">
+                        <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                    </svg>
+                    <span>Arrastra con el ratón o el dedo para rotar la aguja 3D</span>
+                </div>
+            </div>
+
+            <!-- ALERT CARD RESULT -->
+            <div id="alertCard" class="alert-card-animation space-y-4" style="padding: 1.25rem; border-radius: 1rem; border: 4px solid #38bdf8; transition: all 0.3s ease; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);">
+                
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 1rem;" class="sm-flex-row">
+                    <div style="display: flex; align-items: center; gap: 0.875rem; width: 100%;">
+                        <div id="alertIconBg" style="width: 4rem; height: 4rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid rgba(255, 255, 255, 0.4); flex-shrink: 0; background-color: #0284c7;">
+                            <span id="emojiReaction" class="emoji-reaction-bounce">😊🎉</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.7rem; text-transform: uppercase; font-weight: 900; letter-spacing: 0.1em; color: rgba(224, 242, 254, 0.9); display: block;">Estado Nutricional</span>
+                            <h3 id="alertTitle" style="font-size: 1.75rem; font-weight: 900; color: #ffffff; letter-spacing: 0.025em;">--</h3>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.75rem; width: 100%; justify-content: space-between;" class="sm-w-auto">
+                        <button id="audioBtn" onclick="speakRecommendation(true)" class="btn-audio" type="button">
+                            <svg viewBox="0 0 24 24" style="width:1rem; height:1rem; fill:#7dd3fc;">
+                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                            </svg>
+                            <span>Escuchar Consejos</span>
+                        </button>
+
+                        <div style="background-color: rgba(0, 0, 0, 0.75); border: 2px solid #38bdf8; padding: 0.5rem 1.25rem; border-radius: 1rem; text-align: center;">
+                            <span style="font-size: 0.65rem; color: #38bdf8; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; display: block;">Resultado IMC</span>
+                            <div id="imcValueDisplay" style="font-size: 2.25rem; font-weight: 900; color: #38bdf8; font-family: monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo;">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p id="alertMessage" style="font-size: 0.875rem; color: #f8fafc; font-weight: 600; line-height: 1.6; background-color: rgba(2, 6, 23, 0.75); padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.15);">
+                    Calculando resultado...
+                </p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="w-full crystal-header" style="padding: 0.75rem; text-align: center;">
+        <p style="font-size: 0.75rem; color: rgba(254, 240, 138, 0.95); font-weight: 700;">
+            UNSAAC &bull; Escuela Profesional de Obstetricia &bull; Filial Andahuaylas - Perú
+        </p>
+    </footer>
+
+    <script>
+        const pesoInput = document.getElementById('pesoInput');
+        const pesoSlider = document.getElementById('pesoSlider');
+        const tallaInput = document.getElementById('tallaInput');
+        const tallaSlider = document.getElementById('tallaSlider');
+        const imcValueDisplay = document.getElementById('imcValueDisplay');
+        const alertCard = document.getElementById('alertCard');
+        const alertTitle = document.getElementById('alertTitle');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertIconBg = document.getElementById('alertIconBg');
+        const emojiReaction = document.getElementById('emojiReaction');
+
+        let targetAngle = 0;
+        let currentAngle = 0;
+        let rotX = 0.2;
+        let rotY = 0;
+        let currentCategory = '';
+        let speechDebounceTimer = null;
+
+        const DIAGNOSTICS = {
+            'BP': {
+                title: 'Bajo Peso',
+                color: '#0284c7',
+                borderColor: 'rgba(56, 189, 248, 0.9)',
+                bgColor: 'rgba(14, 165, 233, 0.35)',
+                emoji: '😟🥗',
+                message: '😟 Tu peso está por debajo de lo recomendado (IMC menor a 18.5). Se aconseja una consulta nutricional para fortalecer tu salud.',
+                advice: 'Para alcanzar un peso normal, incluye alimentos ricos en nutrientes, proteínas y grasas saludables en tus comidas diarias.',
+                angle: -Math.PI * 0.4
+            },
+            'PN': {
+                title: 'Peso Normal',
+                color: '#0284c7',
+                borderColor: '#38bdf8',
+                bgColor: 'rgba(14, 165, 233, 0.45)', // CELESTE CELEBRATIVO
+                emoji: '😊🎉',
+                message: '😊 ¡Excelente! Tu peso se encuentra en el rango saludable y equilibrado (IMC entre 18.5 y 24.9). Mantén tus excelentes hábitos.',
+                advice: '¡Felicidades! Continúa manteniendo una alimentación equilibrada, buena hidratación y ejercicio físico constante.',
+                angle: -Math.PI * 0.24
+            },
+            'SP': {
+                title: 'Sobrepeso',
+                color: '#f59e0b',
+                borderColor: 'rgba(245, 158, 11, 0.9)',
+                bgColor: 'rgba(217, 119, 6, 0.35)',
+                emoji: '😮👟',
+                message: '😮 Tu peso está ligeramente elevado (IMC entre 25.0 y 29.9). Se recomienda realizar actividad física moderada y equilibrar tu dieta.',
+                advice: 'Lo más importante para lograr un peso normal es realizar al menos 30 minutos de ejercicio diario, beber suficiente agua y reducir azúcares y harinas refinadas.',
+                angle: 0
+            },
+            'OT1': {
+                title: 'Obesidad Grado I',
+                color: '#f97316',
+                borderColor: 'rgba(249, 115, 22, 0.9)',
+                bgColor: 'rgba(234, 88, 12, 0.35)',
+                emoji: '😰🍎',
+                message: '😰 Presentas obesidad moderada (IMC entre 30.0 y 34.9). Es recomendable reducir el consumo de azúcares y consultar con personal de salud.',
+                advice: 'Para volver a un peso saludable, prioriza el consumo de verduras al vapor y proteínas magras, combinándolos con caminatas diarias.',
+                angle: Math.PI * 0.2
+            },
+            'OT2': {
+                title: 'Obesidad Grado II',
+                color: '#f43f5e',
+                borderColor: 'rgba(244, 63, 94, 0.9)',
+                bgColor: 'rgba(225, 29, 72, 0.35)',
+                emoji: '😱🩺',
+                message: '😱 Presentas obesidad elevada (IMC entre 35.0 y 39.9). Se sugiere un seguimiento nutricional constante.',
+                advice: 'Lo más importante es acogerse a un plan alimenticio guiado por nutrición y mantener actividad física de bajo impacto.',
+                angle: Math.PI * 0.35
+            },
+            'OT3': {
+                title: 'Obesidad Grado III',
+                color: '#ef4444',
+                borderColor: 'rgba(239, 68, 68, 0.95)',
+                bgColor: 'rgba(220, 38, 38, 0.45)',
+                emoji: '🚨🩺',
+                message: '🚨 Presentas obesidad severa (IMC de 40.0 o superior). Es sumamente importante acudir a orientación médica profesional.',
+                advice: 'Es fundamental contar con acompañamiento profesional en salud, evitar dietas extremas y realizar cambios paulatinos en tus hábitos.',
+                angle: Math.PI * 0.48
+            }
+        };
+
+        let canvas, ctx;
+
+        function init3DCanvas() {
+            canvas = document.getElementById('gauge3DCanvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            
+            function resize() {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            // Drag Controls (Universal Mouse, Touch & Pointer)
+            let isDragging = false;
+            let lastPos = { x: 0, y: 0 };
+
+            const startDrag = (x, y) => {
+                isDragging = true;
+                lastPos = { x, y };
+            };
+
+            const moveDrag = (x, y) => {
+                if (!isDragging) return;
+                const dx = x - lastPos.x;
+                const dy = y - lastPos.y;
+                rotY += dx * 0.008;
+                rotX += dy * 0.008;
+                rotX = Math.max(-0.4, Math.min(0.4, rotX));
+                rotY = Math.max(-0.8, Math.min(0.8, rotY));
+                lastPos = { x, y };
+            };
+
+            const endDrag = () => { isDragging = false; };
+
+            // Mouse Listeners
+            canvas.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+            window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+            window.addEventListener('mouseup', endDrag);
+
+            // Touch Listeners
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches && e.touches.length > 0) startDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (isDragging && e.touches && e.touches.length > 0) moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+
+            window.addEventListener('touchend', endDrag);
+        }
+
+        function render3DGauge() {
+            if (!ctx || !canvas) return;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2 + (15 * (window.devicePixelRatio || 1));
+            const radius = Math.min(w, h) * 0.35;
+
+            ctx.clearRect(0, 0, w, h);
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            // 3D Projection math
+            function project(x, y, z) {
+                let x1 = x * Math.cos(rotY) + z * Math.sin(rotY);
+                let z1 = -x * Math.sin(rotY) + z * Math.cos(rotY);
+                
+                let y2 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
+                let z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
+
+                const perspective = 600;
+                const scale = perspective / (perspective + z2);
+                return {
+                    x: x1 * scale,
+                    y: y2 * scale,
+                    scale: scale
+                };
+            }
+
+            // Outer Ring
+            ctx.beginPath();
+            const segments = 60;
+            for (let i = 0; i <= segments; i++) {
+                const a = Math.PI + (i / segments) * Math.PI;
+                const px = Math.cos(a) * radius;
+                const py = Math.sin(a) * radius;
+                const pt = project(px, py, 0);
+
+                if (i === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            }
+
+            ctx.lineWidth = 14 * (window.devicePixelRatio || 1);
+            const grad = ctx.createLinearGradient(-radius, 0, radius, 0);
+            grad.addColorStop(0, '#0284c7');
+            grad.addColorStop(0.3, '#38bdf8');
+            grad.addColorStop(0.6, '#f59e0b');
+            grad.addColorStop(1, '#ef4444');
+            ctx.strokeStyle = grad;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Core Sphere
+            const corePt = project(0, 0, 0);
+            const coreGrad = ctx.createRadialGradient(
+                corePt.x - (5 * corePt.scale), corePt.y - (5 * corePt.scale), 2 * corePt.scale,
+                corePt.x, corePt.y, 22 * corePt.scale
+            );
+            coreGrad.addColorStop(0, '#fef08a');
+            coreGrad.addColorStop(0.5, '#d4af37');
+            coreGrad.addColorStop(1, '#854d0e');
+
+            ctx.beginPath();
+            ctx.arc(corePt.x, corePt.y, 20 * corePt.scale, 0, Math.PI * 2);
+            ctx.fillStyle = coreGrad;
+            ctx.fill();
+
+            // Interpolate Needle Rotation Angle
+            currentAngle += (targetAngle - currentAngle) * 0.3;
+
+            // Needle
+            const needleAngle = -Math.PI / 2 + currentAngle;
+            const needleLen = radius * 0.85;
+            const tipX = Math.cos(needleAngle) * needleLen;
+            const tipY = Math.sin(needleAngle) * needleLen;
+
+            const pTip = project(tipX, tipY, 10);
+            const pBaseL = project(-Math.sin(needleAngle) * 8, Math.cos(needleAngle) * 8, 0);
+            const pBaseR = project(Math.sin(needleAngle) * 8, -Math.cos(needleAngle) * 8, 0);
+
+            ctx.beginPath();
+            ctx.moveTo(pBaseL.x, pBaseL.y);
+            ctx.lineTo(pTip.x, pTip.y);
+            ctx.lineTo(pBaseR.x, pBaseR.y);
+            ctx.closePath();
+
+            const needleGrad = ctx.createLinearGradient(pBaseL.x, pBaseL.y, pTip.x, pTip.y);
+            needleGrad.addColorStop(0, '#f87171');
+            needleGrad.addColorStop(1, '#dc2626');
+            ctx.fillStyle = needleGrad;
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function playAlertSound() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const audioContext = new AudioCtx();
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.15);
+                
+                gain.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.3);
+            } catch(e) {
+                // Ignore audio errors on strict autoplay browsers
+            }
+        }
+
+        function speakRecommendation(manualClick = false) {
+            if (!('speechSynthesis' in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                
+                const data = DIAGNOSTICS[currentCategory];
+                if (!data) return;
+
+                let textToSpeak = '';
+                if (currentCategory !== 'PN') {
+                    textToSpeak = `Atención. Tu diagnóstico es ${data.title}. ${data.advice}`;
+                } else {
+                    textToSpeak = `Excelente. Tu diagnóstico es Peso Normal. ${data.advice}`;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                utterance.lang = 'es-ES';
+                window.speechSynthesis.speak(utterance);
+            } catch(e) {
+                // Speech fallback
+            }
+        }
+
+        function updateAlertCard(code, imcVal) {
+            const data = DIAGNOSTICS[code];
+            if (!data) return;
+
+            const categoryChanged = (currentCategory !== code);
+            currentCategory = code;
+
+            targetAngle = data.angle;
+
+            // Instant updates
+            imcValueDisplay.innerText = imcVal;
+            alertTitle.innerText = data.title;
+            alertMessage.innerText = data.message;
+
+            alertCard.style.borderColor = data.borderColor;
+            alertCard.style.backgroundColor = data.bgColor;
+
+            alertIconBg.style.backgroundColor = data.color;
+            emojiReaction.innerText = data.emoji;
+
+            // Debounced audio voice readout on change
+            if (categoryChanged && code !== 'PN') {
+                playAlertSound();
+                if (speechDebounceTimer) clearTimeout(speechDebounceTimer);
+                speechDebounceTimer = setTimeout(() => {
+                    speakRecommendation(false);
+                }, 700);
+            }
+        }
+
+        function calculateIMC() {
+            const peso = parseFloat(pesoInput.value);
+            const talla = parseFloat(tallaInput.value);
+
+            if (!peso || !talla || talla <= 0) return;
+
+            const imc = peso / (talla * talla);
+            const formattedIMC = imc.toFixed(1);
+
+            let key = 'OT3';
+
+            if (imc < 18.5) {
+                key = 'BP';
+            } else if (imc < 25.0) {
+                key = 'PN';
+            } else if (imc < 30.0) {
+                key = 'SP';
+            } else if (imc < 35.0) {
+                key = 'OT1';
+            } else if (imc < 40.0) {
+                key = 'OT2';
+            } else {
+                key = 'OT3';
+            }
+
+            updateAlertCard(key, formattedIMC);
+        }
+
+        function setupEventListeners() {
+            pesoInput.addEventListener('input', (e) => {
+                pesoSlider.value = e.target.value;
+                calculateIMC();
+            });
+
+            pesoSlider.addEventListener('input', (e) => {
+                pesoInput.value = e.target.value;
+                calculateIMC();
+            });
+
+            tallaInput.addEventListener('input', (e) => {
+                tallaSlider.value = e.target.value;
+                calculateIMC();
+            });
+
+            tallaSlider.addEventListener('input', (e) => {
+                tallaInput.value = e.target.value;
+                calculateIMC();
+            });
+        }
+
+        function animationLoop() {
+            requestAnimationFrame(animationLoop);
+            render3DGauge();
+        }
+
+        window.onload = function () {
+            init3DCanvas();
+            setupEventListeners();
+            calculateIMC();
+            animationLoop();
+        };
+    </script>
+</body>
+</html>
